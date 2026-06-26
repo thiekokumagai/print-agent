@@ -12,8 +12,14 @@
     "appId": "com.vapeshop.printagent",
     "productName": "Print Agent",
     "artifactName": "print-agent-setup.exe",
+    "files": [
+      "**/*",
+      ".env",
+      "icon.png"
+    ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "icon.ico"
     },
     "nsis": {
       "oneClick": true,

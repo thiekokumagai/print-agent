@@ -1,21 +1,52 @@
 const { app, Tray, Menu, nativeImage } = require('electron');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const { io } = require('socket.io-client');
 const ThermalPrinter = require("node-thermal-printer").printer;
 const PrinterTypes = require("node-thermal-printer").types;
 const { execSync } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 let tray = null;
 let statusText = 'Desconectado';
 let currentPrinter = 'Buscando...';
+let availablePrinters = [];
 
 // Esconde o ícone na dock do macOS (se for rodar no mac)
 if (app.dock) app.dock.hide();
 
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+// Configurar para abrir junto com o Windows automaticamente
+app.setLoginItemSettings({
+  openAtLogin: true,
+  path: app.getPath('exe')
+});
+
+const API_URL = process.env.API_URL || 'https://ecommerce-core-api-production-3cc7.up.railway.app';
 const STORE_ID = process.env.STORE_ID || '1';
-let PRINTER_INTERFACE = process.env.PRINTER_INTERFACE || 'auto';
+
+// Função para ler/salvar a impressora escolhida
+function getConfigPath() {
+  return path.join(app.getPath('userData'), 'print_agent_config.json');
+}
+
+function loadConfig() {
+  try {
+    const data = fs.readFileSync(getConfigPath(), 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    return { printer: 'auto' };
+  }
+}
+
+function saveConfig(config) {
+  try {
+    fs.writeFileSync(getConfigPath(), JSON.stringify(config));
+  } catch (err) {
+    console.error('Erro ao salvar config', err);
+  }
+}
+
+let PRINTER_INTERFACE = loadConfig().printer;
 
 // Atualiza o menu da bandeja (relógio)
 function updateTray() {
@@ -27,6 +58,21 @@ function updateTray() {
     { label: `Loja ID: ${STORE_ID}`, enabled: false },
     { label: `Imp: ${currentPrinter}`, enabled: false },
     { type: 'separator' },
+    {
+      label: 'Selecionar Impressora',
+      submenu: availablePrinters.map(printerName => ({
+        label: printerName,
+        type: 'radio',
+        checked: currentPrinter === printerName,
+        click: () => {
+          PRINTER_INTERFACE = `printer:${printerName}`;
+          currentPrinter = printerName;
+          saveConfig({ printer: PRINTER_INTERFACE });
+          updateTray();
+        }
+      }))
+    },
+    { type: 'separator' },
     { label: 'Sair', click: () => {
       app.isQuiting = true;
       app.quit();
@@ -36,44 +82,51 @@ function updateTray() {
   tray.setToolTip(`Print Agent - ${statusText}`);
 }
 
-function autoDetectPrinter() {
+function loadAvailablePrinters() {
   try {
     const output = execSync('powershell "Get-Printer | Select-Object -ExpandProperty Name"', { encoding: 'utf-8' });
-    const printers = output.split('\n').map(p => p.trim()).filter(p => p.length > 0);
-    const keywords = ['POS', 'Receipt', 'Bematech', 'Epson', 'Daruma', 'Elgin', 'Thermal', 'Generic'];
-    
-    let foundPrinter = null;
-    for (const p of printers) {
-      for (const kw of keywords) {
-        if (p.toLowerCase().includes(kw.toLowerCase())) {
-          foundPrinter = p;
-          break;
-        }
-      }
-      if (foundPrinter) break;
-    }
-    
-    if (foundPrinter) {
-      return `printer:${foundPrinter}`;
-    } else if (printers.length > 0) {
-      return `printer:${printers[0]}`;
-    }
-    return 'printer:Nenhuma';
+    availablePrinters = output.split('\n').map(p => p.trim()).filter(p => p.length > 0);
   } catch (err) {
-    return 'printer:Erro_Ao_Buscar';
+    availablePrinters = [];
   }
+}
+
+function autoDetectPrinter() {
+  if (availablePrinters.length === 0) loadAvailablePrinters();
+  
+  const keywords = ['POS', 'Receipt', 'Bematech', 'Epson', 'Daruma', 'Elgin', 'Thermal', 'Generic'];
+  let foundPrinter = null;
+  
+  for (const p of availablePrinters) {
+    for (const kw of keywords) {
+      if (p.toLowerCase().includes(kw.toLowerCase())) {
+        foundPrinter = p;
+        break;
+      }
+    }
+    if (foundPrinter) break;
+  }
+  
+  if (foundPrinter) {
+    return `printer:${foundPrinter}`;
+  } else if (availablePrinters.length > 0) {
+    return `printer:${availablePrinters[0]}`;
+  }
+  return 'printer:Nenhuma';
 }
 
 app.whenReady().then(() => {
   // Configura a Tray (Bandeja)
-  // Criar um ícone em branco por padrão se não tivermos arquivo de ícone ainda
-  // Criar um ícone simples em base64 (uma bolinha azul) para aparecer no relógio
-  const iconBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAHBJREFUWEft1sENgCAQRcGvEhu2ZVu2ZVqxAhMwkBDjI/LIPMzce1yZmffN+u9j985zS7v33vMsy5pX2E5ABzIQCwF0gA4khEJoAB0IGkIH6EBEEB1ABxJCIXRABiKCCqEDGUgIhdABOhA0hA5cB84v5dEDD7G0AAAAAElFTkSuQmCC';
-  const icon = nativeImage.createFromDataURL(iconBase64);
+  // Criar um ícone a partir do arquivo físico PNG
+  const iconPath = path.join(__dirname, 'icon.png');
+  const icon = nativeImage.createFromPath(iconPath);
   tray = new Tray(icon);
+  
+  loadAvailablePrinters();
   
   if (PRINTER_INTERFACE === 'auto' || PRINTER_INTERFACE.includes('NomeDaSuaImpressora')) {
     PRINTER_INTERFACE = autoDetectPrinter();
+    saveConfig({ printer: PRINTER_INTERFACE });
   }
   
   currentPrinter = PRINTER_INTERFACE.replace('printer:', '');
