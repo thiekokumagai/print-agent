@@ -158,7 +158,7 @@ app.whenReady().then(() => {
       
       if (listaItens && listaItens.length > 0) {
         listaItens.forEach(item => {
-          let valorNumerico = Number(item.preco || item.unitPrice || 0);
+          let valorNumerico = Number(item.price || item.preco || item.unitPrice || 0);
           
           // Formata o valor sem casas decimais se for exato (ex: 130), ou com 2 casas com vírgula se quebrado
           let precoFormatado = Number.isInteger(valorNumerico) 
@@ -219,6 +219,7 @@ app.whenReady().then(() => {
         'PIX': 'Pix',
         'pix': 'Pix',
         'CASH': 'Dinheiro',
+        'cash': 'Dinheiro',
         'money': 'Dinheiro'
       };
       
