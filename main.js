@@ -50,7 +50,7 @@ let PRINTER_INTERFACE = loadConfig().printer;
 function updateTray() {
   if (!tray) return;
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Print Agent - Vape Shop', enabled: false },
+    { label: 'Impressora - Pod e Mais', enabled: false },
     { type: 'separator' },
     { label: `Status: ${statusText}`, enabled: false },
     { label: `Loja ID: ${STORE_ID}`, enabled: false },
@@ -77,7 +77,7 @@ function updateTray() {
     }}
   ]);
   tray.setContextMenu(contextMenu);
-  tray.setToolTip(`Print Agent - ${statusText}`);
+  tray.setToolTip(`Pod e Mais - ${statusText}`);
 }
 
 function loadAvailablePrinters() {

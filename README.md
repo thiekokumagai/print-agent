@@ -1,6 +1,6 @@
-# Guia do Print Agent 🖨️
+# Guia do Pod e Mais 🖨️
 
-Acabamos de criar a estrutura base do **Print Agent** na pasta `c:\sites\podemais\print-agent`. Ele é um serviço Node.js independente que ficará responsável apenas por ouvir os pedidos e mandar para a impressora.
+Acabamos de criar a estrutura base do **Pod e Mais** na pasta `c:\sites\podemais\print-agent`. Ele é um serviço Node.js independente que ficará responsável apenas por ouvir os pedidos e mandar para a impressora.
 
 ## 1. Como testar o Agent localmente
 
@@ -13,7 +13,7 @@ Acabamos de criar a estrutura base do **Print Agent** na pasta `c:\sites\podemai
    ```bash
    node index.js
    ```
-Você verá logs dizendo que ele está aguardando conexão.
+   Você verá logs dizendo que ele está aguardando conexão.
 
 ---
 
@@ -22,15 +22,21 @@ Você verá logs dizendo que ele está aguardando conexão.
 Atualmente, sua API precisa avisar o agente quando um novo pedido chega. Para isso, vamos precisar instalar o WebSockets no NestJS:
 
 1. **Instalar pacotes no NestJS** (na pasta `ecommerce-api`):
+
    ```bash
    npm install @nestjs/websockets @nestjs/platform-socket.io
    ```
 
 2. **Criar um Gateway (WebSocket)**:
    Criar um arquivo `print.gateway.ts` na sua API:
+
    ```typescript
-   import { WebSocketGateway, WebSocketServer, OnGatewayConnection } from '@nestjs/websockets';
-   import { Server, Socket } from 'socket.io';
+   import {
+     WebSocketGateway,
+     WebSocketServer,
+     OnGatewayConnection,
+   } from "@nestjs/websockets";
+   import { Server, Socket } from "socket.io";
 
    @WebSocketGateway({ cors: true })
    export class PrintGateway implements OnGatewayConnection {
@@ -42,13 +48,15 @@ Atualmente, sua API precisa avisar o agente quando um novo pedido chega. Para is
        const restaurantId = client.handshake.query.restaurant_id;
        if (restaurantId) {
          client.join(`restaurante_${restaurantId}`);
-         console.log(`Print Agent conectado para a loja ${restaurantId}`);
+         console.log(`Pod e Mais conectado para a loja ${restaurantId}`);
        }
      }
 
      // Função para ser chamada quando um novo pedido é pago
      enviarPedidoParaImpressao(restaurantId: string, pedido: any) {
-       this.server.to(`restaurante_${restaurantId}`).emit('novo_pedido_imprimir', pedido);
+       this.server
+         .to(`restaurante_${restaurantId}`)
+         .emit("novo_pedido_imprimir", pedido);
      }
    }
    ```
@@ -60,7 +68,9 @@ Atualmente, sua API precisa avisar o agente quando um novo pedido chega. Para is
    ```
 
 ## 3. Próximos Passos
+
 Se quiser, eu mesmo posso:
+
 1. Implementar o `PrintGateway` na sua `ecommerce-api` (NestJS).
 2. Colocar o evento de impressão diretamente na criação/atualização do pedido.
 3. Gerar um executável `.exe` desse `print-agent` para você testar como se fosse o cliente final.

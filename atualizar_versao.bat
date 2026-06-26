@@ -1,6 +1,6 @@
 @echo off
 echo ==============================================
-echo 🚀 INICIANDO BUILD DO PRINT AGENT...
+echo 🚀 INICIANDO BUILD DO Pod e Mais...
 echo ==============================================
 
 call npm run build
