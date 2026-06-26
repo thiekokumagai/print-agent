@@ -160,10 +160,8 @@ app.whenReady().then(() => {
         listaItens.forEach(item => {
           let valorNumerico = Number(item.price || item.preco || item.unitPrice || 0);
           
-          // Formata o valor sem casas decimais se for exato (ex: 130), ou com 2 casas com vírgula se quebrado
-          let precoFormatado = Number.isInteger(valorNumerico) 
-            ? valorNumerico.toString() 
-            : valorNumerico.toFixed(2).replace('.', ',');
+          // Sempre formata com 2 casas decimais e vírgula
+          let precoFormatado = valorNumerico.toFixed(2).replace('.', ',');
             
           let qtd = item.quantidade || item.quantity || 1;
           let nome = item.nome || item.productName || 'Produto Genérico';
