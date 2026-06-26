@@ -258,7 +258,7 @@ app.whenReady().then(() => {
             body { 
               font-family: 'Inter', Arial, sans-serif; 
               font-size: 11px; 
-              width: 240px;
+              width: 250px;
               margin: 0; 
               padding: 5px 5px;
               color: black;
