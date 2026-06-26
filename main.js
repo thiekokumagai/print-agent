@@ -156,51 +156,115 @@ app.whenReady().then(() => {
       let itensHtml = '';
       if (pedido.itens && Array.isArray(pedido.itens)) {
         pedido.itens.forEach(item => {
-          let preco = Number(item.preco).toFixed(2);
-          itensHtml += `<div>${item.quantidade}x ${item.nome} - R$ ${preco}</div>`;
+          let preco = Number(item.preco || item.unitPrice || 0).toFixed(0); // Arredonda para ficar igual a foto (ex: 130)
+          let qtd = item.quantidade || item.quantity || 1;
+          let nome = item.nome || item.productName || 'Produto Genérico';
+          
+          itensHtml += `
+            <div class="item-row">
+              <div class="item-name">${qtd}x ${nome}</div>
+              <div class="item-price bold">${preco}</div>
+            </div>
+          `;
         });
       } else {
-        itensHtml = `<div>1x Ignite V15 - R$ 75.00</div><div>2x Juice Nasty 60ml - R$ 90.00</div>`;
+        itensHtml = `
+          <div class="item-row"><div class="item-name">1x Ignite V15</div><div class="item-price bold">75</div></div>
+        `;
+      }
+
+      // Formatadores
+      const formatarData = (dataIso) => {
+        if (!dataIso) return new Date().toLocaleDateString('pt-BR');
+        return new Date(dataIso).toLocaleDateString('pt-BR');
+      };
+      
+      const numeroPedido = pedido.orderNumber || pedido.id || Math.floor(Math.random() * 1000);
+      const dataPedido = formatarData(pedido.createdAt);
+      const nomeCliente = pedido.customerName || pedido.cliente_nome || 'Nao informado';
+      const telefoneCliente = pedido.customerPhone || pedido.telefone || '';
+      
+      // Endereço
+      let enderecoHtml = '';
+      const temEndereco = pedido.deliveryAddress || pedido.endereco;
+      if (temEndereco) {
+        let rua = pedido.deliveryAddress || pedido.endereco || '';
+        let num = pedido.deliveryNumber || pedido.numero || '';
+        let bairro = pedido.deliveryNeighborhood || pedido.bairro || '';
+        let comp = pedido.deliveryComplement || pedido.complemento || '';
+        let enderecoCompleto = `${rua}, ${num}, ${bairro} ${comp}`.trim().replace(/, ,/g, ',');
+        enderecoHtml = `<div class="info-block"><span class="bold">Entrega:</span> ${enderecoCompleto}</div>`;
+      }
+
+      // Pagamento e Parcelas
+      let pagamentoHtml = '';
+      const statusPagamento = pedido.paymentStatus === 'PAID' ? 'PAGO' : (pedido.paymentStatus || '');
+      const metodoPagamento = pedido.paymentMethod || '';
+      const parcelas = pedido.paymentInstallments || 1;
+      
+      if (statusPagamento === 'PAGO') {
+        pagamentoHtml += `<div class="bold" style="font-size: 14px; margin-top: 10px;">PAGO</div>`;
+      }
+      if (metodoPagamento) {
+        let txtCartao = metodoPagamento;
+        if (parcelas > 1) txtCartao += ` em ${parcelas}x`;
+        pagamentoHtml += `<div style="margin-top: 5px;">Forma de Pagamento: ${txtCartao}</div>`;
+      }
+
+      // Total
+      const valorTotal = Number(pedido.totalOrder || pedido.total || 0).toFixed(2);
+      let totalHtml = '';
+      if (valorTotal > 0) {
+        totalHtml = `
+          <div class="total-row" style="margin-top: 15px;">
+            <div class="bold" style="font-size: 14px;">Valor Total</div>
+            <div class="bold" style="font-size: 14px;">R$ ${valorTotal}</div>
+          </div>
+        `;
       }
 
       const receiptHtml = `
         <html>
         <head>
           <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
             @page { margin: 0; }
             body { 
-              font-family: monospace; 
-              font-size: 12px; 
+              font-family: 'Inter', Arial, sans-serif; 
+              font-size: 13px; 
               width: 80mm; 
               margin: 0; 
-              padding: 10px;
+              padding: 10px 15px;
               color: black;
+              line-height: 1.4;
             }
             .center { text-align: center; }
             .bold { font-weight: bold; }
-            .line { border-bottom: 1px dashed black; margin: 10px 0; }
-            .right { text-align: right; }
+            .title { font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+            .info-block { margin-top: 15px; }
+            .item-row { display: flex; justify-content: space-between; margin-top: 15px; align-items: flex-start; }
+            .item-name { flex: 1; padding-right: 15px; }
+            .item-price { white-space: nowrap; }
+            .total-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+            .footer { margin-top: 20px; font-size: 12px; }
           </style>
         </head>
         <body>
-          <div class="center">
-            ==========================================<br>
-            <span class="bold">VAPE SHOP</span><br>
-            ==========================================<br>
-          </div>
+          <div class="center title">Pod & Mais</div>
+          
           <div>
-            Pedido: #${pedido.id || Math.floor(Math.random() * 1000)}<br>
-            Data: ${new Date().toLocaleString('pt-BR')}<br>
-            Cliente: ${pedido.cliente_nome || 'Nao informado'}<br>
-            ${pedido.telefone ? `Telefone: ${pedido.telefone}<br>` : ''}
+            <span class="bold">Pedido:</span> ${numeroPedido}<br>
+            <span class="bold">Data:</span> ${dataPedido}<br>
+            <span class="bold">Nome:</span> ${nomeCliente}<br>
+            ${telefoneCliente}
           </div>
-          <div class="line"></div>
-          <div class="bold">ITENS DO PEDIDO:</div>
+
           ${itensHtml}
-          <div class="line"></div>
-          <div class="right bold">TOTAL: R$ ${Number(pedido.total || 57).toFixed(2)}</div>
-          <div class="line"></div>
-          <div class="center">OBRIGADO PELA PREFERENCIA!<br>==========================================</div>
+          ${enderecoHtml}
+          ${totalHtml}
+          ${pagamentoHtml}
+
+          <div class="footer">Obrigado pela preferência!</div>
         </body>
         </html>
       `;
@@ -211,7 +275,7 @@ app.whenReady().then(() => {
         webPreferences: { nodeIntegration: true }
       });
 
-      printWindow.loadURL(\`data:text/html;charset=utf-8,\${encodeURIComponent(receiptHtml)}\`);
+      printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(receiptHtml)}`);
 
       printWindow.webContents.on('did-finish-load', () => {
         printWindow.webContents.print({
@@ -221,7 +285,7 @@ app.whenReady().then(() => {
         }, (success, failureReason) => {
           if (!success) {
             console.error('Falha ao imprimir:', failureReason);
-            dialog.showErrorBox('Erro na Impressora', \`Falha técnica ao imprimir o pedido: \${failureReason}\`);
+      dialog.showErrorBox('Erro na Impressora', `Falha técnica ao imprimir o pedido: ${failureReason}`);
           } else {
             console.log('Impressão enviada com sucesso!');
             if (pedido.id) {
@@ -234,10 +298,10 @@ app.whenReady().then(() => {
       });
 
     } catch (error) {
-      console.error(\`Erro ao tentar imprimir:\`, error.message);
+      console.error(`Erro ao tentar imprimir:`, error.message);
       dialog.showErrorBox(
         'Erro de Impressão',
-        \`Não foi possível imprimir o pedido #\${pedido.id}.\n\nDetalhes do erro: \${error.message}\n\nVerifique se a impressora correta está selecionada no relógio e se ela está ligada.\`
+        `Não foi possível imprimir o pedido #${pedido.id}.\n\nDetalhes do erro: ${error.message}\n\nVerifique se a impressora correta está selecionada no relógio e se ela está ligada.`
       );
     }
   });
