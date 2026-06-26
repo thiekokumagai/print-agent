@@ -233,7 +233,7 @@ app.whenReady().then(() => {
         let chavePagamento = String(metodoPagamento).toLowerCase();
         let txtCartao = tradutorMetodos[metodoPagamento] || tradutorMetodos[chavePagamento] || metodoPagamento;
         if (parcelas > 1) txtCartao += ` em ${parcelas}x`;
-        pagamentoHtml += `<div style="margin-top: 2px;">Forma de Pagamento: ${txtCartao}</div>`;
+        pagamentoHtml += `<div class="bold" style="margin-top: 4px; font-size: 13px;">Forma de Pagamento: ${txtCartao}</div>`;
       }
 
       // Total
