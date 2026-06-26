@@ -1,8 +1,6 @@
-const { app, Tray, Menu, nativeImage, dialog } = require('electron');
+const { app, Tray, Menu, nativeImage, dialog, BrowserWindow } = require('electron');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const { io } = require('socket.io-client');
-const ThermalPrinter = require("node-thermal-printer").printer;
-const PrinterTypes = require("node-thermal-printer").types;
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
@@ -150,66 +148,96 @@ app.whenReady().then(() => {
 
   socket.on('novo_pedido_imprimir', async (pedido) => {
     try {
-      let printer = new ThermalPrinter({
-        type: PrinterTypes.EPSON,
-        interface: PRINTER_INTERFACE,
-        characterSet: 'PC852_LATIN2',
-        removeSpecialCharacters: false,
-        lineCharacter: "="
-      });
+      if (!currentPrinter || currentPrinter === 'Buscando...' || currentPrinter === 'Nenhuma') {
+        throw new Error('Nenhuma impressora válida selecionada.');
+      }
 
-      printer.alignCenter();
-      printer.println("==========================================");
-      printer.bold(true);
-      printer.println("               VAPE SHOP                  ");
-      printer.bold(false);
-      printer.println("==========================================");
-      printer.alignLeft();
-      printer.println(`Pedido: #${pedido.id || Math.floor(Math.random() * 1000)}`);
-      printer.println(`Data: ${new Date().toLocaleString('pt-BR')}`);
-      printer.println(`Cliente: ${pedido.cliente_nome || 'Nao informado'}`);
-      if (pedido.telefone) printer.println(`Telefone: ${pedido.telefone}`);
-      
-      printer.drawLine();
-      printer.bold(true);
-      printer.println("ITENS DO PEDIDO:");
-      printer.bold(false);
-      
+      // Montar o HTML do Cupom
+      let itensHtml = '';
       if (pedido.itens && Array.isArray(pedido.itens)) {
         pedido.itens.forEach(item => {
-          let qtd = String(item.quantidade).padEnd(3, ' ');
-          let nome = String(item.nome).substring(0, 20).padEnd(20, ' ');
-          let preco = `R$ ${Number(item.preco).toFixed(2)}`.padStart(12, ' ');
-          printer.println(`${qtd}x ${nome} ${preco}`);
+          let preco = Number(item.preco).toFixed(2);
+          itensHtml += `<div>${item.quantidade}x ${item.nome} - R$ ${preco}</div>`;
         });
       } else {
-          printer.println("1x  Ignite V15                  R$ 75.00");
-          printer.println("2x  Juice Nasty 60ml            R$ 90.00");
+        itensHtml = `<div>1x Ignite V15 - R$ 75.00</div><div>2x Juice Nasty 60ml - R$ 90.00</div>`;
       }
 
-      printer.drawLine();
-      printer.alignRight();
-      printer.bold(true);
-      printer.println(`TOTAL: R$ ${Number(pedido.total || 57).toFixed(2)}`);
-      printer.bold(false);
-      printer.alignCenter();
-      printer.drawLine();
-      printer.println("OBRIGADO PELA PREFERENCIA!");
-      printer.println("==========================================");
-      
-      printer.cut();
-      
-      await printer.execute();
-      
-      if (pedido.id) {
-        socket.emit('marcar_como_impresso', pedido.id);
-      }
+      const receiptHtml = `
+        <html>
+        <head>
+          <style>
+            @page { margin: 0; }
+            body { 
+              font-family: monospace; 
+              font-size: 12px; 
+              width: 80mm; 
+              margin: 0; 
+              padding: 10px;
+              color: black;
+            }
+            .center { text-align: center; }
+            .bold { font-weight: bold; }
+            .line { border-bottom: 1px dashed black; margin: 10px 0; }
+            .right { text-align: right; }
+          </style>
+        </head>
+        <body>
+          <div class="center">
+            ==========================================<br>
+            <span class="bold">VAPE SHOP</span><br>
+            ==========================================<br>
+          </div>
+          <div>
+            Pedido: #${pedido.id || Math.floor(Math.random() * 1000)}<br>
+            Data: ${new Date().toLocaleString('pt-BR')}<br>
+            Cliente: ${pedido.cliente_nome || 'Nao informado'}<br>
+            ${pedido.telefone ? `Telefone: ${pedido.telefone}<br>` : ''}
+          </div>
+          <div class="line"></div>
+          <div class="bold">ITENS DO PEDIDO:</div>
+          ${itensHtml}
+          <div class="line"></div>
+          <div class="right bold">TOTAL: R$ ${Number(pedido.total || 57).toFixed(2)}</div>
+          <div class="line"></div>
+          <div class="center">OBRIGADO PELA PREFERENCIA!<br>==========================================</div>
+        </body>
+        </html>
+      `;
+
+      // Criar janela oculta para imprimir
+      let printWindow = new BrowserWindow({
+        show: false,
+        webPreferences: { nodeIntegration: true }
+      });
+
+      printWindow.loadURL(\`data:text/html;charset=utf-8,\${encodeURIComponent(receiptHtml)}\`);
+
+      printWindow.webContents.on('did-finish-load', () => {
+        printWindow.webContents.print({
+          silent: true,
+          printBackground: true,
+          deviceName: currentPrinter
+        }, (success, failureReason) => {
+          if (!success) {
+            console.error('Falha ao imprimir:', failureReason);
+            dialog.showErrorBox('Erro na Impressora', \`Falha técnica ao imprimir o pedido: \${failureReason}\`);
+          } else {
+            console.log('Impressão enviada com sucesso!');
+            if (pedido.id) {
+              socket.emit('marcar_como_impresso', pedido.id);
+            }
+          }
+          // Fechar janela após imprimir
+          printWindow.close();
+        });
+      });
 
     } catch (error) {
-      console.error(`Erro ao tentar imprimir:`, error.message);
+      console.error(\`Erro ao tentar imprimir:\`, error.message);
       dialog.showErrorBox(
         'Erro de Impressão',
-        `Não foi possível imprimir o pedido #${pedido.id}.\n\nDetalhes do erro: ${error.message}\n\nVerifique se a impressora correta está selecionada no relógio e se ela está ligada.`
+        \`Não foi possível imprimir o pedido #\${pedido.id}.\n\nDetalhes do erro: \${error.message}\n\nVerifique se a impressora correta está selecionada no relógio e se ela está ligada.\`
       );
     }
   });
