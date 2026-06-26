@@ -7,14 +7,10 @@ call npm run build
 
 echo.
 echo ==============================================
-echo 📦 COPIANDO PARA A API...
-echo ==============================================
-
-copy "dist\print-agent-setup.exe" "..\ecommerce-api\public\downloads\print-agent-setup.exe" /Y
-
-echo.
-echo ==============================================
 echo ✅ ATUALIZACAO CONCLUIDA COM SUCESSO!
-echo O arquivo ja esta pronto na sua API para download.
+echo O instalador print-agent-setup.exe foi gerado.
+echo Abrindo a pasta dist para voce copiar para o Google Drive...
 echo ==============================================
+
+explorer "dist"
 pause
