@@ -154,7 +154,7 @@ app.whenReady().then(() => {
 
       // Montar o HTML do Cupom
       let itensHtml = '';
-      const listaItens = pedido.orderItems || pedido.itens || [];
+      const listaItens = pedido.items || pedido.orderItems || pedido.itens || [];
       
       if (listaItens && listaItens.length > 0) {
         listaItens.forEach(item => {
