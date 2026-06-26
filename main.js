@@ -210,7 +210,7 @@ app.whenReady().then(() => {
       let pagamentoHtml = '';
       const statusPagamento = pedido.paymentStatus === 'PAID' ? 'PAGO' : (pedido.paymentStatus || '');
       const metodoPagamento = pedido.paymentMethod || '';
-      const parcelas = pedido.paymentInstallments || 1;
+      const parcelas = pedido.paymentInstallments || pedido.installments || 1;
       
       const tradutorMetodos = {
         'CREDIT_CARD': 'Cartão de Crédito',
@@ -258,7 +258,7 @@ app.whenReady().then(() => {
             body { 
               font-family: 'Inter', Arial, sans-serif; 
               font-size: 11px; 
-              width: 250px;
+              width: 255px;
               margin: 0; 
               padding: 5px 5px;
               color: black;
