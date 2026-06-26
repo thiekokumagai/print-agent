@@ -196,10 +196,14 @@ app.whenReady().then(() => {
       if (temEndereco) {
         let rua = pedido.deliveryAddress || pedido.endereco || '';
         let num = pedido.deliveryNumber || pedido.numero || '';
-        let bairro = pedido.deliveryNeighborhood || pedido.bairro || '';
         let comp = pedido.deliveryComplement || pedido.complemento || '';
-        let enderecoCompleto = `${rua}, ${num}, ${bairro} ${comp}`.trim().replace(/, ,/g, ',');
-        enderecoHtml = `<div class="info-block"><span class="bold">Entrega:</span> ${enderecoCompleto}</div>`;
+        
+        let enderecoFormatado = `${rua}, ${num}`;
+        if (comp) {
+          enderecoFormatado += ` - ${comp}`;
+        }
+        
+        enderecoHtml = `<div class="info-block"><span class="bold">Entrega:</span> ${enderecoFormatado}</div>`;
       }
 
       // Pagamento e Parcelas
@@ -249,15 +253,16 @@ app.whenReady().then(() => {
         <head>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+            * { box-sizing: border-box; }
             @page { margin: 0; }
             body { 
               font-family: 'Inter', Arial, sans-serif; 
-              font-size: 13px; 
+              font-size: 14px; 
               width: 80mm; 
               margin: 0; 
-              padding: 10px 15px;
+              padding: 10px 10px;
               color: black;
-              line-height: 1.4;
+              line-height: 1.5;
             }
             .center { text-align: center; }
             .bold { font-weight: bold; }
