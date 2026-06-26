@@ -239,7 +239,7 @@ app.whenReady().then(() => {
         pagamentoHtml += `<div class="bold" style="font-size: 11px; margin-top: 3px;">PAGO</div>`;
       }
       
-      if (metodoPagamento) {
+      if (metodoPagamento && showProductPrices) {
         let chavePagamento = String(metodoPagamento).toLowerCase();
         let txtCartao = tradutorMetodos[metodoPagamento] || tradutorMetodos[chavePagamento] || metodoPagamento;
         if (parcelas > 1) txtCartao += ` em ${parcelas}x`;
@@ -249,7 +249,7 @@ app.whenReady().then(() => {
       // Total
       const valorTotal = Number(pedido.totalOrder || pedido.total || 0).toFixed(2).replace('.', ',');
       let totalHtml = '';
-      if (Number(pedido.totalOrder || pedido.total || 0) > 0) {
+      if (showProductPrices && Number(pedido.totalOrder || pedido.total || 0) > 0) {
         totalHtml = `
           <div class="total-row" style="margin-top: 8px;">
             <div class="bold" style="font-size: 11px;">Valor Total</div>
