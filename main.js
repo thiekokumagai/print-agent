@@ -226,14 +226,14 @@ app.whenReady().then(() => {
       };
       
       if (statusPagamento === 'PAGO') {
-        pagamentoHtml += `<div class="bold" style="font-size: 14px; margin-top: 10px;">PAGO</div>`;
+        pagamentoHtml += `<div class="bold" style="font-size: 11px; margin-top: 3px;">PAGO</div>`;
       }
       
       if (metodoPagamento) {
         let chavePagamento = String(metodoPagamento).toLowerCase();
         let txtCartao = tradutorMetodos[metodoPagamento] || tradutorMetodos[chavePagamento] || metodoPagamento;
         if (parcelas > 1) txtCartao += ` em ${parcelas}x`;
-        pagamentoHtml += `<div style="margin-top: 5px;">Forma de Pagamento: ${txtCartao}</div>`;
+        pagamentoHtml += `<div style="margin-top: 2px;">Forma de Pagamento: ${txtCartao}</div>`;
       }
 
       // Total
@@ -241,9 +241,9 @@ app.whenReady().then(() => {
       let totalHtml = '';
       if (Number(pedido.totalOrder || pedido.total || 0) > 0) {
         totalHtml = `
-          <div class="total-row" style="margin-top: 15px;">
-            <div class="bold" style="font-size: 14px;">Valor Total</div>
-            <div class="bold" style="font-size: 14px;">R$ ${valorTotal}</div>
+          <div class="total-row" style="margin-top: 8px;">
+            <div class="bold" style="font-size: 11px;">Valor Total</div>
+            <div class="bold" style="font-size: 11px;">R$ ${valorTotal}</div>
           </div>
         `;
       }
@@ -257,22 +257,22 @@ app.whenReady().then(() => {
             @page { margin: 0; }
             body { 
               font-family: 'Inter', Arial, sans-serif; 
-              font-size: 14px; 
-              width: 80mm; 
+              font-size: 11px; 
+              width: 235px;
               margin: 0; 
-              padding: 10px 10px;
+              padding: 5px 5px;
               color: black;
-              line-height: 1.5;
+              line-height: 1.2;
             }
             .center { text-align: center; }
             .bold { font-weight: bold; }
-            .title { font-size: 16px; font-weight: bold; margin-bottom: 15px; }
-            .info-block { margin-top: 15px; }
-            .item-row { display: flex; justify-content: space-between; margin-top: 15px; align-items: flex-start; }
+            .title { font-size: 13px; font-weight: bold; margin-bottom: 8px; }
+            .info-block { margin-top: 8px; }
+            .item-row { display: flex; justify-content: space-between; margin-top: 5px; align-items: flex-start; }
             .item-name { flex: 1; padding-right: 15px; }
             .item-price { white-space: nowrap; }
-            .total-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
-            .footer { margin-top: 20px; font-size: 12px; }
+            .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+            .footer { margin-top: 10px; font-size: 11px; }
           </style>
         </head>
         <body>
