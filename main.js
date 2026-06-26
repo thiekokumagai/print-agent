@@ -156,6 +156,8 @@ app.whenReady().then(() => {
       let itensHtml = '';
       const listaItens = pedido.items || pedido.orderItems || pedido.itens || [];
       
+      const showProductPrices = pedido.showProductPrices !== false;
+
       if (listaItens && listaItens.length > 0) {
         listaItens.forEach(item => {
           let valorNumerico = Number(item.price || item.preco || item.unitPrice || 0);
@@ -166,12 +168,20 @@ app.whenReady().then(() => {
           let qtd = item.quantidade || item.quantity || 1;
           let nome = item.nome || item.productName || 'Produto Genérico';
           
-          itensHtml += `
-            <div class="item-row">
-              <div class="item-name">${qtd}x ${nome}</div>
-              <div class="item-price bold">${precoFormatado}</div>
-            </div>
-          `;
+          if (showProductPrices) {
+            itensHtml += `
+              <div class="item-row">
+                <div class="item-name">${qtd}x ${nome}</div>
+                <div class="item-price bold">${precoFormatado}</div>
+              </div>
+            `;
+          } else {
+            itensHtml += `
+              <div class="item-row">
+                <div class="item-name">${qtd}x ${nome}</div>
+              </div>
+            `;
+          }
         });
       } else {
         itensHtml = `
@@ -248,6 +258,8 @@ app.whenReady().then(() => {
         `;
       }
 
+      const titleText = showProductPrices ? "Pod & Mais" : "New Juices";
+
       const receiptHtml = `
         <html>
         <head>
@@ -276,7 +288,7 @@ app.whenReady().then(() => {
           </style>
         </head>
         <body>
-          <div class="center title">Pod & Mais</div>
+          <div class="center title">${titleText}</div>
           
           <div>
             <span class="bold">Pedido:</span> ${numeroPedido}<br>
