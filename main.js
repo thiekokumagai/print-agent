@@ -249,7 +249,7 @@ app.whenReady().then(() => {
       // Total
       const valorTotal = Number(pedido.totalOrder || pedido.total || 0).toFixed(2).replace('.', ',');
       let totalHtml = '';
-      if (Number(pedido.totalOrder || pedido.total || 0) > 0) {
+      if (Number(pedido.totalOrder || pedido.total || 0) > 0 && statusPagamento !== 'PAGO') {
         totalHtml = `
           <div class="total-row" style="margin-top: 8px;">
             <div class="bold" style="font-size: 11px;">Valor Total</div>
