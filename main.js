@@ -163,7 +163,7 @@ app.whenReady().then(() => {
           // Formata o valor sem casas decimais se for exato (ex: 130), ou com 2 casas com vírgula se quebrado
           let precoFormatado = Number.isInteger(valorNumerico) 
             ? valorNumerico.toString() 
-            : valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            : valorNumerico.toFixed(2).replace('.', ',');
             
           let qtd = item.quantidade || item.quantity || 1;
           let nome = item.nome || item.productName || 'Produto Genérico';
@@ -212,8 +212,14 @@ app.whenReady().then(() => {
       
       const tradutorMetodos = {
         'CREDIT_CARD': 'Cartão de Crédito',
+        'credit_card': 'Cartão de Crédito',
+        'credit': 'Cartão de Crédito',
+        'debit': 'Cartão de Débito',
+        'DEBIT_CARD': 'Cartão de Débito',
         'PIX': 'Pix',
-        'CASH': 'Dinheiro'
+        'pix': 'Pix',
+        'CASH': 'Dinheiro',
+        'money': 'Dinheiro'
       };
       
       if (statusPagamento === 'PAGO') {
@@ -221,13 +227,14 @@ app.whenReady().then(() => {
       }
       
       if (metodoPagamento) {
-        let txtCartao = tradutorMetodos[metodoPagamento] || metodoPagamento;
+        let chavePagamento = String(metodoPagamento).toLowerCase();
+        let txtCartao = tradutorMetodos[metodoPagamento] || tradutorMetodos[chavePagamento] || metodoPagamento;
         if (parcelas > 1) txtCartao += ` em ${parcelas}x`;
         pagamentoHtml += `<div style="margin-top: 5px;">Forma de Pagamento: ${txtCartao}</div>`;
       }
 
       // Total
-      const valorTotal = Number(pedido.totalOrder || pedido.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const valorTotal = Number(pedido.totalOrder || pedido.total || 0).toFixed(2).replace('.', ',');
       let totalHtml = '';
       if (Number(pedido.totalOrder || pedido.total || 0) > 0) {
         totalHtml = `
