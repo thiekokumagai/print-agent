@@ -1,4 +1,4 @@
-const { app, Tray, Menu, nativeImage } = require('electron');
+const { app, Tray, Menu, nativeImage, dialog } = require('electron');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const { io } = require('socket.io-client');
 const ThermalPrinter = require("node-thermal-printer").printer;
@@ -207,6 +207,10 @@ app.whenReady().then(() => {
 
     } catch (error) {
       console.error(`Erro ao tentar imprimir:`, error.message);
+      dialog.showErrorBox(
+        'Erro de Impressão',
+        `Não foi possível imprimir o pedido #${pedido.id}.\n\nDetalhes do erro: ${error.message}\n\nVerifique se a impressora correta está selecionada no relógio e se ela está ligada.`
+      );
     }
   });
 });
