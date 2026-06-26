@@ -192,11 +192,11 @@ app.whenReady().then(() => {
       
       // Endereço
       let enderecoHtml = '';
-      const temEndereco = pedido.deliveryAddress || pedido.endereco;
+      const temEndereco = pedido.street || pedido.deliveryAddress || pedido.endereco;
       if (temEndereco) {
-        let rua = pedido.deliveryAddress || pedido.endereco || '';
-        let num = pedido.deliveryNumber || pedido.numero || '';
-        let comp = pedido.deliveryComplement || pedido.complemento || '';
+        let rua = pedido.street || pedido.deliveryAddress || pedido.endereco || '';
+        let num = pedido.number || pedido.deliveryNumber || pedido.numero || '';
+        let comp = pedido.complement || pedido.deliveryComplement || pedido.complemento || '';
         
         let enderecoFormatado = `${rua}, ${num}`;
         if (comp) {
