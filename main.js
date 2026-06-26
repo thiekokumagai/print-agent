@@ -154,22 +154,30 @@ app.whenReady().then(() => {
 
       // Montar o HTML do Cupom
       let itensHtml = '';
-      if (pedido.itens && Array.isArray(pedido.itens)) {
-        pedido.itens.forEach(item => {
-          let preco = Number(item.preco || item.unitPrice || 0).toFixed(0); // Arredonda para ficar igual a foto (ex: 130)
+      const listaItens = pedido.orderItems || pedido.itens || [];
+      
+      if (listaItens && listaItens.length > 0) {
+        listaItens.forEach(item => {
+          let valorNumerico = Number(item.preco || item.unitPrice || 0);
+          
+          // Formata o valor sem casas decimais se for exato (ex: 130), ou com 2 casas com vírgula se quebrado
+          let precoFormatado = Number.isInteger(valorNumerico) 
+            ? valorNumerico.toString() 
+            : valorNumerico.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            
           let qtd = item.quantidade || item.quantity || 1;
           let nome = item.nome || item.productName || 'Produto Genérico';
           
           itensHtml += `
             <div class="item-row">
               <div class="item-name">${qtd}x ${nome}</div>
-              <div class="item-price bold">${preco}</div>
+              <div class="item-price bold">${precoFormatado}</div>
             </div>
           `;
         });
       } else {
         itensHtml = `
-          <div class="item-row"><div class="item-name">1x Ignite V15</div><div class="item-price bold">75</div></div>
+          <div class="item-row"><div class="item-name">Nenhum item detectado</div><div class="item-price bold">0</div></div>
         `;
       }
 
@@ -202,19 +210,26 @@ app.whenReady().then(() => {
       const metodoPagamento = pedido.paymentMethod || '';
       const parcelas = pedido.paymentInstallments || 1;
       
+      const tradutorMetodos = {
+        'CREDIT_CARD': 'Cartão de Crédito',
+        'PIX': 'Pix',
+        'CASH': 'Dinheiro'
+      };
+      
       if (statusPagamento === 'PAGO') {
         pagamentoHtml += `<div class="bold" style="font-size: 14px; margin-top: 10px;">PAGO</div>`;
       }
+      
       if (metodoPagamento) {
-        let txtCartao = metodoPagamento;
+        let txtCartao = tradutorMetodos[metodoPagamento] || metodoPagamento;
         if (parcelas > 1) txtCartao += ` em ${parcelas}x`;
         pagamentoHtml += `<div style="margin-top: 5px;">Forma de Pagamento: ${txtCartao}</div>`;
       }
 
       // Total
-      const valorTotal = Number(pedido.totalOrder || pedido.total || 0).toFixed(2);
+      const valorTotal = Number(pedido.totalOrder || pedido.total || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       let totalHtml = '';
-      if (valorTotal > 0) {
+      if (Number(pedido.totalOrder || pedido.total || 0) > 0) {
         totalHtml = `
           <div class="total-row" style="margin-top: 15px;">
             <div class="bold" style="font-size: 14px;">Valor Total</div>
