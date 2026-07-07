@@ -248,8 +248,8 @@ app.whenReady().then(() => {
         if ((chavePagamento === 'cash' || chavePagamento === 'dinheiro') && pedido.changeAmount > 0) {
            let amountProv = Number(pedido.amountProvided || 0).toFixed(2).replace('.', ',');
            let changeAmt = Number(pedido.changeAmount || 0).toFixed(2).replace('.', ',');
-           pagamentoHtml += `<div class="bold" style="font-size: 11px;">Dinheiro do cliente: R$ ${amountProv}</div>`;
-           pagamentoHtml += `<div class="bold" style="font-size: 12px;">Troco: R$ ${changeAmt}</div>`;
+           pagamentoHtml += `<div class="bold" style="font-size: 11px;">Troco para: R$ ${amountProv}</div>`;
+           pagamentoHtml += `<div class="bold" style="font-size: 12px;">Valor do troco: R$ ${changeAmt}</div>`;
         }
       }
 
