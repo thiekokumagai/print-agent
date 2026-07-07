@@ -244,6 +244,13 @@ app.whenReady().then(() => {
         let txtCartao = tradutorMetodos[metodoPagamento] || tradutorMetodos[chavePagamento] || metodoPagamento;
         if (parcelas > 1) txtCartao += ` em ${parcelas}x`;
         pagamentoHtml += `<div class="bold" style="margin-top: 4px; font-size: 13px;">Forma de Pagamento: ${txtCartao}</div>`;
+        
+        if ((chavePagamento === 'cash' || chavePagamento === 'dinheiro') && pedido.changeAmount > 0) {
+           let amountProv = Number(pedido.amountProvided || 0).toFixed(2).replace('.', ',');
+           let changeAmt = Number(pedido.changeAmount || 0).toFixed(2).replace('.', ',');
+           pagamentoHtml += `<div class="bold" style="font-size: 11px;">Dinheiro do cliente: R$ ${amountProv}</div>`;
+           pagamentoHtml += `<div class="bold" style="font-size: 12px;">Troco: R$ ${changeAmt}</div>`;
+        }
       }
 
       // Total
