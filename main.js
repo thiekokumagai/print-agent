@@ -212,8 +212,13 @@ app.whenReady().then(() => {
         if (comp) {
           enderecoFormatado += ` - ${comp}`;
         }
-        
         enderecoHtml = `<div class="info-block"><span class="bold">Entrega:</span> ${enderecoFormatado}</div>`;
+      }
+
+      let observacaoHtml = '';
+      const observacao = pedido.observation || pedido.observacao || '';
+      if (observacao) {
+        observacaoHtml = `<div class="info-block"><span class="bold" style="background: yellow;">Obs:</span> ${observacao}</div>`;
       }
 
       // Pagamento e Parcelas
@@ -306,6 +311,7 @@ app.whenReady().then(() => {
 
           ${itensHtml}
           ${enderecoHtml}
+          ${observacaoHtml}
           ${totalHtml}
           ${pagamentoHtml}
 
