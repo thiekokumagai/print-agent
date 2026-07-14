@@ -148,6 +148,11 @@ app.whenReady().then(() => {
 
   socket.on('novo_pedido_imprimir', async (pedido) => {
     try {
+      if (pedido.status === 'CANCELLED' || pedido.status === 'cancelado' || String(pedido.status).toUpperCase() === 'CANCELED') {
+        console.log(`Pedido ${pedido.id} cancelado. Ignorando impressão.`);
+        return;
+      }
+
       if (!currentPrinter || currentPrinter === 'Buscando...' || currentPrinter === 'Nenhuma') {
         throw new Error('Nenhuma impressora válida selecionada.');
       }
