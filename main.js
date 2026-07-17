@@ -166,11 +166,14 @@ app.whenReady().then(() => {
       if (listaItens && listaItens.length > 0) {
         listaItens.forEach(item => {
           let valorNumerico = Number(item.price || item.preco || item.unitPrice || 0);
+          let qtd = item.quantidade || item.quantity || 1;
+          
+          // Multiplica pela quantidade para exibir o total do item
+          let valorTotalItem = valorNumerico * qtd;
           
           // Sempre formata com 2 casas decimais e vírgula
-          let precoFormatado = valorNumerico.toFixed(2).replace('.', ',');
+          let precoFormatado = valorTotalItem.toFixed(2).replace('.', ',');
             
-          let qtd = item.quantidade || item.quantity || 1;
           let nome = item.nome || item.productName || 'Produto Genérico';
           
           if (showProductPrices) {
