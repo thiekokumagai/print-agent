@@ -175,18 +175,24 @@ app.whenReady().then(() => {
           let precoFormatado = valorTotalItem.toFixed(2).replace('.', ',');
             
           let nome = item.nome || item.productName || 'Produto Genérico';
+          let variacao = item.variation || item.variationString || item.variacao || '';
+
+          let nomeFormatado = `${qtd}x ${nome}`;
+          if (variacao && String(variacao).trim() !== '') {
+            nomeFormatado += `<br/><span style="font-size: 10px; font-weight: normal; color: #333;">(${String(variacao).trim()})</span>`;
+          }
           
           if (showProductPrices) {
             itensHtml += `
               <div class="item-row">
-                <div class="item-name">${qtd}x ${nome}</div>
+                <div class="item-name">${nomeFormatado}</div>
                 <div class="item-price bold">${precoFormatado}</div>
               </div>
             `;
           } else {
             itensHtml += `
               <div class="item-row">
-                <div class="item-name">${qtd}x ${nome}</div>
+                <div class="item-name">${nomeFormatado}</div>
               </div>
             `;
           }
