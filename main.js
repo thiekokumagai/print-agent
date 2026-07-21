@@ -179,7 +179,7 @@ app.whenReady().then(() => {
 
           let nomeFormatado = `${qtd}x ${nome}`;
           if (variacao && String(variacao).trim() !== '') {
-            nomeFormatado += `<br/><span style="font-size: 10px; font-weight: normal; color: #333;">(${String(variacao).trim()})</span>`;
+            nomeFormatado += `<br/><span class="bold">(${String(variacao).trim()})</span>`;
           }
           
           if (showProductPrices) {
@@ -221,10 +221,14 @@ app.whenReady().then(() => {
         let rua = pedido.street || pedido.deliveryAddress || pedido.endereco || '';
         let num = pedido.number || pedido.deliveryNumber || pedido.numero || '';
         let comp = pedido.complement || pedido.deliveryComplement || pedido.complemento || '';
+        let bairro = pedido.neighborhood || pedido.deliveryNeighborhood || pedido.bairro || '';
         
         let enderecoFormatado = `${rua}, ${num}`;
         if (comp) {
           enderecoFormatado += ` - ${comp}`;
+        }
+        if (bairro) {
+          enderecoFormatado += ` - ${bairro}`;
         }
         enderecoHtml = `<div class="info-block"><span class="bold">Entrega:</span> ${enderecoFormatado}</div>`;
       }
