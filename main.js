@@ -262,7 +262,7 @@ app.whenReady().then(() => {
         pagamentoHtml += `<div class="bold" style="font-size: 11px; margin-top: 3px;">PAGO</div>`;
       }
       
-      if (metodoPagamento && showProductPrices) {
+      if (metodoPagamento) {
         let chavePagamento = String(metodoPagamento).toLowerCase();
         let txtCartao = tradutorMetodos[metodoPagamento] || tradutorMetodos[chavePagamento] || metodoPagamento;
         if (parcelas > 1) txtCartao += ` em ${parcelas}x`;
