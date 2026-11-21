@@ -5,30 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --win",
+    "build": "electron-builder --config electron-builder.js --win",
     "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "build": {
-    "appId": "com.vapeshop.printagent",
-    "productName": "Pod e Mais",
-    "artifactName": "print-agent-setup.exe",
-    "files": [
-      "**/*",
-      ".env",
-      "icon.png"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "icon.ico"
-    },
-    "nsis": {
-      "oneClick": true,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": false,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Pod e Mais"
-    }
   },
   "keywords": [],
   "author": "",
@@ -36,6 +14,7 @@
   "type": "commonjs",
   "dependencies": {
     "dotenv": "^17.4.2",
+    "electron-updater": "^6.8.11",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {

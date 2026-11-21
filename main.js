@@ -1,4 +1,5 @@
 const { app, Tray, Menu, nativeImage, dialog, BrowserWindow } = require('electron');
+const { autoUpdater } = require('electron-updater');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const { io } = require('socket.io-client');
 const { execSync } = require('child_process');
@@ -9,6 +10,8 @@ let tray = null;
 let statusText = 'Desconectado';
 let currentPrinter = 'Buscando...';
 let availablePrinters = [];
+let isManualUpdateCheck = false;
+let isCheckingForUpdates = false;
 
 // Esconde o ícone na dock do macOS (se for rodar no mac)
 if (app.dock) app.dock.hide();
@@ -50,7 +53,7 @@ let PRINTER_INTERFACE = loadConfig().printer;
 function updateTray() {
   if (!tray) return;
   const contextMenu = Menu.buildFromTemplate([
-    { label: 'Impressora - Pod e Mais', enabled: false },
+    { label: `Impressora - Pod e Mais (v${app.getVersion()})`, enabled: false },
     { type: 'separator' },
     { label: `Status: ${statusText}`, enabled: false },
     { label: `Loja ID: ${STORE_ID}`, enabled: false },
@@ -69,6 +72,13 @@ function updateTray() {
           updateTray();
         }
       }))
+    },
+    { type: 'separator' },
+    {
+      label: 'Verificar atualizações',
+      click: () => {
+        checkForUpdates(true);
+      }
     },
     { type: 'separator' },
     { label: 'Sair', click: () => {
@@ -113,6 +123,115 @@ function autoDetectPrinter() {
   return 'printer:Nenhuma';
 }
 
+
+const UPDATE_CHECK_INTERVAL_MS = 3 * 60 * 60 * 1000; // 3 horas
+
+function setupAutoUpdater() {
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('checking-for-update', () => {
+    isCheckingForUpdates = true;
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    console.log('Nova versão disponível:', info && info.version);
+    if (isManualUpdateCheck) {
+      isManualUpdateCheck = false;
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Atualização disponível',
+        message: `Nova versão (v${info.version}) encontrada.`,
+        detail: 'O download foi iniciado em segundo plano. Avisaremos quando estiver pronta para instalar.',
+        buttons: ['OK'],
+      });
+    }
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    isCheckingForUpdates = false;
+    if (isManualUpdateCheck) {
+      isManualUpdateCheck = false;
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Sem atualizações',
+        message: `Você já está na versão mais recente (v${app.getVersion()}).`,
+        buttons: ['OK'],
+      });
+    }
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    isCheckingForUpdates = false;
+    isManualUpdateCheck = false;
+    dialog
+      .showMessageBox({
+        type: 'info',
+        title: 'Atualização pronta',
+        message: `A versão v${info.version} foi baixada.`,
+        detail: 'Deseja reiniciar o Pod e Mais agora para instalar a atualização? Se preferir, ela será instalada ao fechar o programa.',
+        buttons: ['Reiniciar e atualizar', 'Depois'],
+        defaultId: 0,
+        cancelId: 1,
+      })
+      .then(({ response }) => {
+        if (response === 0) {
+          app.isQuiting = true;
+          autoUpdater.quitAndInstall();
+        }
+      })
+      .catch((err) => {
+        console.error('Erro ao exibir diálogo de atualização:', err);
+      });
+  });
+
+  autoUpdater.on('error', (err) => {
+    isCheckingForUpdates = false;
+    console.error('Erro ao verificar atualizações:', err && err.message ? err.message : err);
+    if (isManualUpdateCheck) {
+      isManualUpdateCheck = false;
+      dialog.showMessageBox({
+        type: 'warning',
+        title: 'Erro ao verificar atualizações',
+        message: 'Não foi possível verificar atualizações agora.',
+        detail: 'Verifique sua conexão com a internet e tente novamente mais tarde.',
+        buttons: ['OK'],
+      });
+    }
+  });
+}
+
+function checkForUpdates(manual = false) {
+  if (!app.isPackaged) {
+    if (manual) {
+      dialog.showMessageBox({
+        type: 'info',
+        title: 'Modo desenvolvimento',
+        message: 'A verificação de atualizações só funciona na versão instalada (.exe).',
+        buttons: ['OK'],
+      });
+    }
+    return;
+  }
+
+  if (isCheckingForUpdates) return;
+  isManualUpdateCheck = manual;
+
+  autoUpdater.checkForUpdates().catch((err) => {
+    isCheckingForUpdates = false;
+    console.error('Falha na checagem de atualizações:', err && err.message ? err.message : err);
+    if (isManualUpdateCheck) {
+      isManualUpdateCheck = false;
+      dialog.showMessageBox({
+        type: 'warning',
+        title: 'Erro ao verificar atualizações',
+        message: 'Não foi possível verificar atualizações agora.',
+        buttons: ['OK'],
+      });
+    }
+  });
+}
+
 app.whenReady().then(() => {
   // Configura a Tray (Bandeja)
   // Criar um ícone a partir do arquivo físico PNG
@@ -129,6 +248,10 @@ app.whenReady().then(() => {
   
   currentPrinter = PRINTER_INTERFACE.replace('printer:', '');
   updateTray();
+
+  setupAutoUpdater();
+  setTimeout(() => checkForUpdates(false), 10000);
+  setInterval(() => checkForUpdates(false), UPDATE_CHECK_INTERVAL_MS);
 
   // Conecta ao WebSocket do backend
   const socket = io(API_URL, {
