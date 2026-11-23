@@ -22,6 +22,7 @@ module.exports = {
   win: {
     target: 'nsis',
     icon: 'icon.ico',
+    requestedExecutionLevel: 'asInvoker',
   },
   nsis: {
     oneClick: true,
@@ -30,5 +31,9 @@ module.exports = {
     createDesktopShortcut: true,
     createStartMenuShortcut: true,
     shortcutName: 'Pod e Mais',
+    installerIcon: 'icon.ico',
+    uninstallerIcon: 'icon.ico',
+    deleteAppDataOnUninstall: true,
+    include: 'installer.nsh',
   },
 };

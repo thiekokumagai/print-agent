@@ -27,23 +27,50 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Instalar dependências
-        shell: bash
+        shell: pwsh
         run: npm ci
 
       - name: Subir versão patch e publicar tag
+        id: version
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          npm version patch -m "chore(release): v%s [skip ci]"
+          TAG=$(npm version patch -m "chore(release): v%s [skip ci]")
           git push origin HEAD:main --follow-tags
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Gerar e publicar instalador Windows
-        shell: bash
+      - name: Gerar .env para o build
+        shell: pwsh
+        env:
+          API_URL: ${{ vars.API_URL || secrets.API_URL }}
+        run: |
+          if ($env:API_URL) {
+            Set-Content -Path ".env" -Value "API_URL=$($env:API_URL)" -NoNewline -Encoding UTF8
+          }
+
+      - name: Gerar instalador Windows
+        shell: pwsh
+        run: |
+          node ./node_modules/electron-builder/out/cli/cli.js --config electron-builder.js --win --publish never
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (-not (Test-Path "dist/print-agent-setup.exe") -or -not (Test-Path "dist/latest.yml")) {
+            Write-Error "Build não gerou dist/print-agent-setup.exe ou dist/latest.yml"
+            exit 1
+          }
+
+      - name: Publicar release única no GitHub
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --config electron-builder.js --win --publish always
+        run: |
+          $tag = "${{ steps.version.outputs.tag }}"
+          $files = @("dist/print-agent-setup.exe", "dist/latest.yml")
+          if (Test-Path "dist/print-agent-setup.exe.blockmap") {
+            $files += "dist/print-agent-setup.exe.blockmap"
+          }
+          gh release create $tag @files --title $tag --generate-notes --latest
