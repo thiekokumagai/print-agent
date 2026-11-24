@@ -125,7 +125,7 @@ function autoDetectPrinter() {
 }
 
 
-const UPDATE_CHECK_INTERVAL_MS = 3 * 60 * 60 * 1000; // 3 horas
+const UPDATE_CHECK_INTERVAL_MS = 20 * 60 * 1000; // 20 minutos (só consulta o GitHub; o download só acontece com versão nova)
 
 function notifyTray(title, content) {
   console.log(`[update] ${title}: ${content}`);

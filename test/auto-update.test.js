@@ -110,3 +110,12 @@ test('nenhuma caixa modal no fluxo de atualização', () => {
   const mod = fs.readFileSync(path.join(ROOT, 'auto-update.js'), 'utf8');
   assert.doesNotMatch(mod, /dialog|showMessageBox/);
 });
+
+test("checa atualização a cada 20 minutos e também logo ao abrir o app", () => {
+  const src = require("node:fs").readFileSync(require("node:path").join(__dirname, "..", "main.js"), "utf8");
+  const m = src.match(/const UPDATE_CHECK_INTERVAL_MS = ([^;]+);/);
+  assert.ok(m, "constante UPDATE_CHECK_INTERVAL_MS não encontrada");
+  assert.strictEqual(Function(`return (${m[1]})`)(), 20 * 60 * 1000);
+  assert.match(src, /setInterval\(\(\) => checkForUpdates\(false\), UPDATE_CHECK_INTERVAL_MS\)/);
+  assert.match(src, /setTimeout\(\(\) => checkForUpdates\(false\), 10000\)/);
+});
