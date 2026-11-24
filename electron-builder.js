@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const files = ['**/*', 'icon.png'];
+const files = ['**/*', 'icon.png', '!test/**'];
 if (fs.existsSync(path.join(__dirname, '.env'))) {
   files.push('.env');
 }
