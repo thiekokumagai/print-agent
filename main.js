@@ -2,6 +2,7 @@ const { app, Tray, Menu, nativeImage, dialog, BrowserWindow } = require('electro
 const { autoUpdater } = require('electron-updater');
 const { createAutoUpdate } = require('./auto-update');
 const { createPrintJobs } = require('./print-jobs');
+const { isComboItem, buildComboComponentsHtml } = require('./combo-lines');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const { io } = require('socket.io-client');
 const { execSync } = require('child_process');
@@ -215,10 +216,15 @@ app.whenReady().then(() => {
           let nome = item.nome || item.productName || 'Produto Genérico';
           let variacao = item.variation || item.variationString || item.variacao || '';
 
-          let nomeFormatado = `${qtd}x ${nome}`;
+          const comboPrefix = isComboItem(item) ? `[COMBO] ` : '';
+
+          let nomeFormatado = `${qtd}x ${comboPrefix}${nome}`;
           if (variacao && String(variacao).trim() !== '') {
             nomeFormatado += `<br/><span class="bold">(${String(variacao).trim()})</span>`;
           }
+
+          // Combo: peças listadas abaixo, para separar e conferir o pedido
+          nomeFormatado += buildComboComponentsHtml(item, qtd);
           
           if (showProductPrices) {
             itensHtml += `
